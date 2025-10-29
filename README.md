@@ -20,7 +20,7 @@ This Discord bot is designed to work alongside the popular [Craig bot](https://c
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/Craig-Recording-Notification-Bot.git
+    git clone https://github.com/AntiDoteMA/Craig-Recording-Notification-Bot.git
     cd Craig-Recording-Notification-Bot
     ```
 
