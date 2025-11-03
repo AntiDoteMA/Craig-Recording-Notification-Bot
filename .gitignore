@@ -1,0 +1,8 @@
+# Ignore environment files containing secrets
+.env
+
+# Ignore local credentials file
+src/bot.creds
+*.ai.md
+*.creds
+*.env
