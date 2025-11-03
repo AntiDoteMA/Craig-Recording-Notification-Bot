@@ -114,7 +114,10 @@ if __name__ == '__main__':
         # If hosting platforms require an open port (like Render), start a
         # tiny Flask server in a background daemon thread. The server will
         # bind to the PORT environment variable if present.
-        port_val = '8088'
+        # Use the PORT environment variable if provided by the host; otherwise
+        # default to 8088 so the process still binds a port for platforms that
+        # require it.
+        port_val = os.getenv('PORT', '8088')
         if port_val:
             try:
                 port = int(port_val)
@@ -128,7 +131,7 @@ if __name__ == '__main__':
                     from flask import Flask as _Flask
                     app = _Flask('health')
 
-                    @app.route('/')
+                    @app.route('/healthz', methods=['GET'])
                     def health():
                         return 'OK', 200
 
