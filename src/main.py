@@ -1,6 +1,7 @@
 import discord
 import os
 import datetime
+import threading
 
 # Optionally load environment variables from a .env file. This requires
 # installing python-dotenv (added to requirements.txt).
@@ -12,6 +13,12 @@ except Exception:
     # environment variables. This keeps the script working without forcing
     # a new dependency at runtime.
     pass
+
+# Try to import Flask for a lightweight dummy server used by some hosts (e.g., Render)
+try:
+    from flask import Flask
+except Exception:
+    Flask = None
 
 intents = discord.Intents.default()
 intents.voice_states = True
@@ -103,4 +110,35 @@ if __name__ == '__main__':
         print(" - Create a .env file in the project root with: DISCORD_TOKEN=your_token_here and install python-dotenv")
     else:
         print("Starting bot...")
+
+        # If hosting platforms require an open port (like Render), start a
+        # tiny Flask server in a background daemon thread. The server will
+        # bind to the PORT environment variable if present.
+        port_val = '8088'
+        if port_val:
+            try:
+                port = int(port_val)
+            except Exception:
+                port = None
+
+            if Flask is not None and port is not None:
+                def _run_flask():
+                    # Import inside the thread to keep static analysis happy and
+                    # avoid referencing a potentially None symbol at module level.
+                    from flask import Flask as _Flask
+                    app = _Flask('health')
+
+                    @app.route('/')
+                    def health():
+                        return 'OK', 200
+
+                    # Disable the reloader; run as a simple blocking server in a thread.
+                    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+
+                t = threading.Thread(target=_run_flask, daemon=True)
+                t.start()
+                print(f"Started Flask health server on 0.0.0.0:{port}")
+            elif port is not None:
+                print("PORT is set but Flask is not installed; install Flask or set the service to a background worker.")
+
         client.run(token)
